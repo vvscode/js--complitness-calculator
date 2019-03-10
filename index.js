@@ -1,9 +1,31 @@
 const DEFAULT_IMPACT = 10;
 const FULL_IMPACT = 100;
 
+const isParallelBranchItem = item => item && item.type ==='parallel' && Array.isArray(item.branches);
+
+const expandParallelBranches = flows => {
+  if (!flows.some(flow => flow.some(isParallelBranchItem))) {
+    return flows;
+  }
+
+  let result = [];
+  flows.forEach(flow => {
+    const firstListEl = flow.find(isParallelBranchItem);
+
+    if (!firstListEl) {
+      result.push(flow);
+    } else {
+      firstListEl.branches.forEach(listElement =>
+        result.push(flow.map(el => (el === firstListEl ? listElement : el))),
+      );
+    }
+  });
+  return expandParallelBranches(result);
+};
+
 class CompletenessCalculator {
   constructor(...flows) {
-    this.flows = flows.map(flow =>
+    this.flows = expandParallelBranches(flows).map(flow =>
       flow.map(el => {
         if (typeof el === 'string') {
           return {

@@ -19,13 +19,13 @@ describe('CompletenessCalculator', () => {
       const flow = [
         'step 1',
         'step 2',
-        { name: 'step 3'},
-        { name: 'step 4'},
+        { name: 'step 3' },
+        { name: 'step 4' },
         'step 5',
       ];
       beforeEach(() => {
         calc = new CompletenessCalculator(flow);
-      })
+      });
       it('calculates completeness for unknown steps', () => {
         expect(calc.getCompleteness('unknown step')).toBe(0);
       });
@@ -35,20 +35,20 @@ describe('CompletenessCalculator', () => {
         expect(calc.getCompleteness('step 3')).toBe(0.6);
         expect(calc.getCompleteness('step 4')).toBe(0.8);
         expect(calc.getCompleteness('step 5')).toBe(1);
-      })
+      });
     });
     describe('Simple variegated flow', () => {
       let calc;
       const flow = [
         'step 1',
         'step 2',
-        { name: 'step 3', impact: 5},
+        { name: 'step 3', impact: 5 },
         'step 4',
-        { name: 'step 5', impact: 5}
+        { name: 'step 5', impact: 5 },
       ];
       beforeEach(() => {
         calc = new CompletenessCalculator(flow);
-      })
+      });
       it('calculates completeness for unknown steps', () => {
         expect(calc.getCompleteness('unknown step')).toBe(0);
       });
@@ -65,20 +65,15 @@ describe('CompletenessCalculator', () => {
       const flow1 = [
         'step 1',
         'step 2',
-        { name: 'step 3', impact: 5},
+        { name: 'step 3', impact: 5 },
         'step 4',
-        { name: 'step 5', impact: 5},
+        { name: 'step 5', impact: 5 },
         'step 6',
       ];
-      const flow2 = [
-        'step 1',
-        'step 2',
-        'step 3',
-        'step 4',
-      ];
+      const flow2 = ['step 1', 'step 2', 'step 3', 'step 4'];
       beforeEach(() => {
         calc = new CompletenessCalculator(flow1, flow2);
-      })
+      });
       it('calculates completeness for unknown steps', () => {
         expect(calc.getCompleteness('unknown step')).toBe(0);
       });
@@ -91,5 +86,35 @@ describe('CompletenessCalculator', () => {
         expect(calc.getCompleteness('step 6')).toBe(1);
       });
     });
+
+    describe.only('Parallel branches', () => {
+      let calc;
+      const flow1 = [
+        'step 1',
+        {
+          type: 'parallel',
+          branches: ['step 2.1', 'step 2.2'],
+        },
+        {
+          type: 'parallel',
+          branches: ['step 3.1', 'step 3.2'],
+        },
+        'step 4',
+      ];
+      beforeEach(() => {
+        calc = new CompletenessCalculator(flow1);
+      });
+      it('calculates completeness for unknown steps', () => {
+        expect(calc.getCompleteness('unknown step')).toBe(0);
+      });
+      it('calculates completeness for known steps', () => {
+        expect(calc.getCompleteness('step 1')).toBe(0.25);
+        expect(calc.getCompleteness('step 2.1')).toBe(0.5);
+        expect(calc.getCompleteness('step 2.2')).toBe(0.5);
+        expect(calc.getCompleteness('step 3.1')).toBe(0.75);
+        expect(calc.getCompleteness('step 3.2')).toBe(0.75);
+        expect(calc.getCompleteness('step 4')).toBe(1);
+      });
+    });
   });
-})
+});
