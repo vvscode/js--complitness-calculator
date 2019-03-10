@@ -23,12 +23,9 @@ class CompletenessCalculator {
       }),
     );
 
-    const totalImpact = this.flows.reduce(
-      (totalAcc, flow) => totalAcc + flow.reduce((flowAcc, el) => flowAcc + el.impact, 0),
-      0,
-    );
-    const impactValue = FULL_IMPACT / totalImpact;
     this.flows.forEach(flow => {
+      const totalImpact = flow.reduce((flowAcc, el) => flowAcc + el.impact, 0);
+      const impactValue = FULL_IMPACT / totalImpact;
       let value = 0;
       flow.forEach((el, index) => {
         value += el.impact * impactValue;
@@ -46,7 +43,7 @@ class CompletenessCalculator {
     if (!stepValues.length) {
       return 0;
     }
-    return Math.min(...stepValues) / 100;
+    return Math.max(...stepValues) / 100;
   }
 }
 
