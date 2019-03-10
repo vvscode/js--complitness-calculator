@@ -1,7 +1,8 @@
 const DEFAULT_IMPACT = 10;
 const FULL_IMPACT = 100;
 
-const isParallelBranchItem = item => item && item.type ==='parallel' && Array.isArray(item.branches);
+const isParallelBranchItem = item =>
+  item && item.type === "parallel" && Array.isArray(item.branches);
 
 const expandParallelBranches = flows => {
   if (!flows.some(flow => flow.some(isParallelBranchItem))) {
@@ -16,33 +17,68 @@ const expandParallelBranches = flows => {
       result.push(flow);
     } else {
       firstListEl.branches.forEach(listElement =>
-        result.push(flow.map(el => (el === firstListEl ? listElement : el))),
+        result.push(flow.map(el => (el === firstListEl ? listElement : el)))
       );
     }
   });
   return expandParallelBranches(result);
 };
 
+const isSequenceItem = item =>
+  item && item.type === "sequence" && Array.isArray(item.sequence);
+
+const expandSequences = flows => {
+  if (
+    !flows.some(flow => {
+      return flow.some(isSequenceItem);
+    })
+  ) {
+    return flows;
+  }
+
+  let result = [];
+  flows.forEach(flow => {
+    const firstListEl = flow.find(isSequenceItem);
+
+    if (!firstListEl) {
+      result.push(flow);
+    } else {
+      const flowResult = [];
+      flow.forEach(el => {
+        if (el === firstListEl) {
+          firstListEl.sequence.forEach(el => flowResult.push(el));
+        } else {
+          flowResult.push(el);
+        }
+      });
+      result.push(flowResult);
+    }
+  });
+  return expandSequences(result);
+};
+
 class CompletenessCalculator {
   constructor(...flows) {
-    this.flows = expandParallelBranches(flows).map(flow =>
+    let flowsToAdd = expandParallelBranches(flows);
+    let linearFlows = expandSequences(flowsToAdd);
+    this.flows = linearFlows.map(flow =>
       flow.map(el => {
-        if (typeof el === 'string') {
+        if (typeof el === "string") {
           return {
             name: el,
-            impact: DEFAULT_IMPACT,
+            impact: DEFAULT_IMPACT
           };
         }
-        if (!!el && typeof el === 'object' && typeof el.name === 'string') {
+        if (!!el && typeof el === "object" && typeof el.name === "string") {
           return {
             name: el.name,
-            impact: +el.impact || DEFAULT_IMPACT,
+            impact: +el.impact || DEFAULT_IMPACT
           };
         }
         throw new Error(
-          `${JSON.stringify(el)} is unrecognized step definition`,
+          `${JSON.stringify(el)} is unrecognized step definition`
         );
-      }),
+      })
     );
 
     this.flows.forEach(flow => {
